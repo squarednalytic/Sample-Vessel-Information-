@@ -25,7 +25,7 @@ Aplikasi web sederhana yang menampilkan informasi kapal dalam format tabel dan m
    cd visualisasi-data-kapal
 2. Gunakan perintah :
 
-   npm install
-   node server.js
-   npm init -y
-   npm install express
+   - npm install
+   - node server.js
+   - npm init -y
+   - npm install express
