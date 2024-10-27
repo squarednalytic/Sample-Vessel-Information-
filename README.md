@@ -31,10 +31,10 @@ Aplikasi web sederhana yang menampilkan informasi kapal dalam format tabel dan m
    - npm install express
      
 ## Gambar
-Frontend
+public/index.html
 ![img1](https://github.com/user-attachments/assets/c0acc51c-3abb-4d3f-a508-9dfa88a8d3f4)
 
-API test
+API test @ http://localhost:3000/api/vessels
 ![img2](https://github.com/user-attachments/assets/c70263bf-fcd9-419f-8743-37c5b8f2f978)
 
 
