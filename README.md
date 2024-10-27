@@ -29,3 +29,12 @@ Aplikasi web sederhana yang menampilkan informasi kapal dalam format tabel dan m
    - node server.js
    - npm init -y
    - npm install express
+     
+## Gambar
+Frontend
+![img1](https://github.com/user-attachments/assets/c0acc51c-3abb-4d3f-a508-9dfa88a8d3f4)
+
+API test
+![img2](https://github.com/user-attachments/assets/c70263bf-fcd9-419f-8743-37c5b8f2f978)
+
+
