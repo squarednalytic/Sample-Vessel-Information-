@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Vessel ETA ETD</title>
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+        <h1>Contoh Informasi Kapal Kargo dari Singapura ke Indonesia</h1>
+    
+    <label for="vessel-select">Vessel:</label>
+    <select id="vessel-select">
+        <option value="">Select a vessel</option>
+    </select>
+
+    <label for="eta-select">ETA:</label>
+    <select id="eta-select">
+        <option value="">Select ETA</option>
+    </select>
+
+    <label for="etd-select">ETD:</label>
+    <select id="etd-select">
+        <option value="">Select ETD</option>
+    </select>
+
+    <label for="dari-select">Dari:</label>
+    <select id="dari-select">
+        <option value="">Select Dari</option>
+    </select>
+<p></p>
+    <center><table id="vessel-table" style="display:none;">
+        <thead>
+            <tr>
+                <th>Nama Kapal</th>
+                <th>ETA</th>
+                <th>ETD</th>
+                <th>Dari</th>
+                <th>Tujuan</th>
+                <th>Kargo</th>
+            </tr>
+        </thead>
+        <tbody id="vessel-table-body">
+        </tbody>
+    </table></center>
+	
+  <div id="container"></div> 
+        <canvas id="myChart" width="350" height="250"></canvas>
+
+    </div>
+
+    <script>
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0'); 
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        }
+        let vessels = [];
+
+        // Function to fetch vessel data from API
+        async function fetchVesselData() {
+            try {
+                const response = await fetch('http://localhost:3000/api/vessels');
+
+                if (!response.ok) {
+                    const errorText = await response.text(); 
+                    throw new Error(`HTTP error! Status: ${response.status}, Response: ${errorText}`);
+                }
+
+                vessels = await response.json(); 
+                populateVesselSelect(vessels); 
+            } catch (error) {
+                console.error('Error fetching vessel data:', error);
+            }
+        }
+
+        function populateVesselSelect(vessels) {
+            const vesselSelect = document.getElementById('vessel-select');
+            vesselSelect.innerHTML = ''; 
+
+            vessels.forEach(vessel => {
+                const option = document.createElement('option');
+                option.value = vessel.id;
+                option.textContent = vessel.name;
+                vesselSelect.appendChild(option);
+            });
+        }
+
+        $('#vessel-select').change(function() {
+            const selectedVesselId = $(this).val();
+            if (!selectedVesselId) return; 
+
+            const selectedVessel = vessels.find(vessel => vessel.id === parseInt(selectedVesselId));
+
+            if (selectedVessel) {
+                populateDropdowns(selectedVessel);
+                
+                document.getElementById('vessel-table').style.display = 'table';
+
+                populateVesselTable(selectedVessel);
+                
+                renderCharts(selectedVessel);
+            } else {
+                console.error('Selected vessel not found in the vessels array.');
+            }
+        });
+
+        function populateDropdowns(vessel) {
+            $('#eta-select').empty().append(`<option value="">Select ETA</option>`);
+            $('#etd-select').empty().append(`<option value="">Select ETD</option>`);
+            $('#dari-select').empty().append(`<option value="">Select Dari</option>`);
+
+            $('#eta-select').append(`<option value="${vessel.eta}">${formatDate(vessel.eta)}</option>`);
+            $('#etd-select').append(`<option value="${vessel.etd}">${formatDate(vessel.etd)}</option>`);
+            $('#dari-select').append(`<option value="${vessel.from}">${vessel.from}</option>`);
+        }
+
+        // Function to populate the vessel table
+        function populateVesselTable(vessel) {
+            const vesselTableBody = document.getElementById('vessel-table-body');
+            vesselTableBody.innerHTML = ''; // Clear existing rows
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${vessel.name}</td>
+                <td>${formatDate(vessel.eta)}</td>
+                <td>${formatDate(vessel.etd)}</td>
+                <td>${vessel.from}</td>
+                <td>${vessel.to}</td>
+                <td>${vessel.cargo}</td>
+            `;
+            vesselTableBody.appendChild(row);
+        }
+
+        // Function to render charts
+        function renderCharts(selectedVessel) {
+            // Render Highcharts
+            const json = {
+                chart: { type: 'column' },
+                title: { text: 'Vessel Information' },
+                xAxis: {
+                    categories: ['Vessel Information']
+                },
+                yAxis: {
+                    allowDecimals: false,
+                    title: {
+                        text: 'Units'
+                    }
+                },
+                tooltip: {
+                    formatter: function () {
+                        return '<b>' + this.series.name + '</b><br/>' +
+                            this.point.y + ' ' + this.point.name.toLowerCase();
+                    }
+                },
+                credits: { enabled: false },
+                series: [{
+                    data: [selectedVessel.name, formatDate(selectedVessel.eta), formatDate(selectedVessel.etd), selectedVessel.from, selectedVessel.to, selectedVessel.cargo]
+                }]
+            };
+
+            $('#container').highcharts(json);
+
+            // Render Chart.js chart
+            const ctx = document.getElementById('myChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Nama Kapal', 'ETA', 'ETD', 'Dari', 'Tujuan', 'Kargo'],
+                    datasets: [{
+                        label: 'Vessel Information',
+                        data: [selectedVessel.name, formatDate(selectedVessel.eta), formatDate(selectedVessel.etd), selectedVessel.from, selectedVessel.to, selectedVessel.cargo],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Call the function to fetch vessel data when the script loads
+        fetchVesselData();
+    </script>
+</body>
+</html>
